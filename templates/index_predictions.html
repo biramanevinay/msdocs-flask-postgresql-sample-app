@@ -1,0 +1,74 @@
+{% extends "base_predictions.html" %}
+{% block title %}Predictions{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+      body {
+          min-height: 75rem;
+          padding-top: 4.5rem;
+      }
+
+      .score {
+        display: block;
+        font-size: 16px;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .score-wrap {
+        display: inline-block;
+        position: relative;
+        height: 19px;
+      }
+      
+      .score .stars-active {
+        color: #EEBD01;
+        position: relative;
+        z-index: 10;
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      
+      .score .stars-inactive {
+        color: grey;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-text-stroke: initial;
+        /* overflow: hidden; */
+      }
+  </style>
+{% endblock %}
+{% block content %}
+      <h1>Predictions</h1>
+
+      {% if True %}
+          <table class="table">
+              <thead>
+                  <tr>
+                      <th>Transcript ID</th>
+                      <th>Sentence ID</th>
+                      <th>Sentence</th>
+                      <th>Intent</th>
+                      <th>Score</th>
+                      
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for prediction in predictions %}
+                      <tr>
+                          <td>{{ prediction.transcript_id }}</td>
+                          <td>{{ prediction.sent_id }}</td>
+                          <td>{{ predictions.sentence }}</td>
+                          <td>{{ prediction.intent }}</td>
+                          <td>{{ prediction.score }}</td>
+                          
+                      </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      {% else %}
+          <p>No Predictions exist. </p>
+      {% endif %}
+{% endblock %}

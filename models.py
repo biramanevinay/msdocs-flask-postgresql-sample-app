@@ -3,6 +3,17 @@ from sqlalchemy.orm import validates
 
 from app import db
 
+class Predictions(db.Model):
+    __tablename__ = 'predictions'
+    transcript_id = Column(String(1000), primary_key=True)
+    sent_id = Column(String(100), primary_key=True)
+    sentence = Column(String(5000))
+    intent = Column(String(1000))
+    score = Column(db.Float)
+
+    def __str__(self):
+        return self.name
+
 
 class Restaurant(db.Model):
     __tablename__ = 'restaurant'

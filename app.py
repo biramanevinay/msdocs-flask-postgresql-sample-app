@@ -32,13 +32,13 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # The import must be done after db initialization due to circular import issue
-from models import Restaurant, Review
+from models import Restaurant, Review, Predictions
 
 @app.route('/', methods=['GET'])
 def index():
     print('Request for index page received')
-    restaurants = Restaurant.query.all()
-    return render_template('index.html', restaurants=restaurants)
+    predictions = Predictions.query.all()
+    return render_template('index_predictions.html', predictions=predictions)
 
 @app.route('/<int:id>', methods=['GET'])
 def details(id):

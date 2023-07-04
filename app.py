@@ -1,11 +1,10 @@
 import os
 from datetime import datetime
-
-from flask import Flask, redirect, render_template, request, send_from_directory, url_for
+from flask import flash, Flask, redirect, render_template, request, send_from_directory, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-
+from forms import PredictionsForm,SentimentsForm
 
 app = Flask(__name__, static_folder='static')
 csrf = CSRFProtect(app)
@@ -32,92 +31,74 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 # The import must be done after db initialization due to circular import issue
-from models import Restaurant, Review, Predictions
+from models import Restaurant, Review, Predictions, Labels, Sentiment_Label, Sentiments
 
 @app.route('/', methods=['GET'])
 def index():
     print('Request for index page received')
     predictions = Predictions.query.all()
-    return render_template('index_predictions.html', predictions=predictions)
-
-@app.route('/<int:id>', methods=['GET'])
-def details(id):
-    restaurant = Restaurant.query.where(Restaurant.id == id).first()
-    reviews = Review.query.where(Review.restaurant == id)
-    return render_template('details.html', restaurant=restaurant, reviews=reviews)
-
-@app.route('/create', methods=['GET'])
-def create_restaurant():
-    print('Request for add restaurant page received')
-    return render_template('create_restaurant.html')
-
-@app.route('/add', methods=['POST'])
-@csrf.exempt
-def add_restaurant():
-    try:
-        name = request.values.get('restaurant_name')
-        street_address = request.values.get('street_address')
-        description = request.values.get('description')
-    except (KeyError):
-        # Redisplay the question voting form.
-        return render_template('add_restaurant.html', {
-            'error_message': "You must include a restaurant name, address, and description",
-        })
-    else:
-        restaurant = Restaurant()
-        restaurant.name = name
-        restaurant.street_address = street_address
-        restaurant.description = description
-        db.session.add(restaurant)
-        db.session.commit()
-
-        return redirect(url_for('details', id=restaurant.id))
-
-@app.route('/review/<int:id>', methods=['POST'])
-@csrf.exempt
-def add_review(id):
-    try:
-        user_name = request.values.get('user_name')
-        rating = request.values.get('rating')
-        review_text = request.values.get('review_text')
-    except (KeyError):
-        #Redisplay the question voting form.
-        return render_template('add_review.html', {
-            'error_message': "Error adding review",
-        })
-    else:
-        review = Review()
-        review.restaurant = id
-        review.review_date = datetime.now()
-        review.user_name = user_name
-        review.rating = int(rating)
-        review.review_text = review_text
-        db.session.add(review)
-        db.session.commit()
-
-    return redirect(url_for('details', id=id))
-
-@app.context_processor
-def utility_processor():
-    def star_rating(id):
-        reviews = Review.query.where(Review.restaurant == id)
-
-        ratings = []
-        review_count = 0
-        for review in reviews:
-            ratings += [review.rating]
-            review_count += 1
-
-        avg_rating = sum(ratings) / len(ratings) if ratings else 0
-        stars_percent = round((avg_rating / 5.0) * 100) if review_count > 0 else 0
-        return {'avg_rating': avg_rating, 'review_count': review_count, 'stars_percent': stars_percent}
-
-    return dict(star_rating=star_rating)
+    table_pred = Labels(predictions)
+    table_pred.border = True
+    sentiments = Sentiments.query.all()
+    table_sent = Sentiment_Label(sentiments)
+    table_sent.border = True
+    return render_template('index_predictions.html', table_pred = table_pred, table_sent = table_sent)
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+def save_changes(sent, form, new=False,option = 'intent'):
+    """
+    Save the changes to the database
+    """
+    # Get data from form and assign it to the correct attributes
+    # of the SQLAlchemy table object
+    if option == 'intent':
+        sent.intent = form.intent.data
+    else:
+        sent.sentiment = form.sentiment.data
+    db.session.commit()
+
+@app.route('/label', methods=['GET', 'POST'])
+@csrf.exempt
+def edit_label():
+    transcript_id  = request.args.get('transcript_id', None)
+    sent_id  = request.args.get('sent_id', None)
+    qry = db.session.query(Predictions).filter(
+                Predictions.transcript_id==transcript_id and Predictions.sent_id==sent_id)
+    sent = qry.first()
+    if sent:
+        form = PredictionsForm(formdata=request.form, obj=sent)
+        if request.method == 'POST' and form.validate():
+            # save edits
+            save_changes(sent, form)
+            #flash('Intent label updated successfully!')
+            return redirect('/')
+        return render_template('edit_label.html',form=form)
+    else:
+        return 'Error loading #{id}'.format(id=id)
+
+@app.route('/sentiment', methods=['GET', 'POST'])
+@csrf.exempt
+def edit_sentiment_label():
+    transcript_id  = request.args.get('transcript_id', None)
+    sent_id  = request.args.get('sent_id', None)
+    qry = db.session.query(Sentiments).filter(
+                Sentiments.transcript_id==transcript_id and Sentiments.sent_id==sent_id)
+    sent = qry.first()
+    if sent:
+        form = SentimentsForm(formdata=request.form, obj=sent)
+        if request.method == 'POST' and form.validate():
+            # save edits
+            save_changes(sent, form, option = 'sentiment')
+            #flash('Intent label updated successfully!')
+            return redirect('/')
+        return render_template('edit_sentiment_label.html',form=form)
+    else:
+
+        return 'Error loading #{id}'.format(id=id)
 
 if __name__ == '__main__':
     app.run()

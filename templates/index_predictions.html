@@ -41,34 +41,20 @@
   </style>
 {% endblock %}
 {% block content %}
-      <h1>Predictions</h1>
+      <h1>Intents</h1>
 
       {% if True %}
-          <table class="table">
-              <thead>
-                  <tr>
-                      <th>Transcript ID</th>
-                      <th>Sentence ID</th>
-                      <th>Sentence</th>
-                      <th>Intent</th>
-                      <th>Score</th>
-                      
-                  </tr>
-              </thead>
-              <tbody>
-                  {% for prediction in predictions %}
-                      <tr>
-                          <td>{{ prediction.transcript_id }}</td>
-                          <td>{{ prediction.sent_id }}</td>
-                          <td>{{ prediction.sentence }}</td>
-                          <td>{{ prediction.intent }}</td>
-                          <td>{{ prediction.score }}</td>
-                          
-                      </tr>
-                  {% endfor %}
-              </tbody>
-          </table>
+          {{ table_pred }}
       {% else %}
-          <p>No Predictions exist. </p>
+          <p>No predictions exist.  </p>
       {% endif %}
+      <div></div>
+      <h1>Sentiments</h1>
+
+      {% if True %}
+          {{ table_sent }}
+      {% else %}
+          <p>No predictions exist.  </p>
+      {% endif %}
+
 {% endblock %}

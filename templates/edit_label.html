@@ -1,0 +1,27 @@
+{% extends "base_predictions.html" %}
+{% block title %}Edit Label{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+      body {
+          min-height: 75rem;
+          padding-top: 4.5rem;
+      }
+  </style>
+{% endblock %}
+{% block content %}
+    <h1>Update Label</h1>
+
+    {% from "_formhelpers.html" import render_field, render_data %}
+    <form method="post">
+        <dl>
+            {{ render_data(form.transcript_id) }}
+            {{ render_data(form.sent_id) }}
+            {{ render_data(form.sentence) }}
+            {{ render_field(form.intent) }}
+            {{ render_data(form.score) }}
+        </dl>
+        <p><input type="submit" value="Submit">
+    </p></form>
+{% endblock %}
+    
